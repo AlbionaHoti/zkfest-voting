@@ -1,9 +1,6 @@
-# ZKsync Hardhat project template
+# ZKFest Voting System on ZKsync Era
 
 This project was scaffolded with [zksync-cli](https://github.com/matter-labs/zksync-cli).
-
-
-# ZKFest Voting System on ZKsync Era
 
 This project demonstrates a simple voting system for ZKFest, implemented on ZKsync Era. It showcases how to deploy and interact with smart contracts while considering pubdata costs.
 
@@ -121,7 +118,4 @@ WALLET_PRIVATE_KEY=your_private_key_here...
 
 ## License
 
-This project is under the [MIT](./LICENSE) license.# zkfest-voting
-# zkfest-voting
-# zkfest-voting
-# zkfest-voting
+This project is under the [MIT](./LICENSE) license.
