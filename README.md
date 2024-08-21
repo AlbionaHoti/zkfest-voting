@@ -124,6 +124,174 @@ Unlike calldata-based rollups that precharge for data, ZKsync Era uses a post-ch
 By understanding these mechanics, developers can create more efficient and reliable applications on ZKsync Era, taking full advantage of its unique approach to handling pubdata costs.
 
 
+# How Max Gas Per Pubdata Works on ZKsync Era--A Technical Deep Dive
+
+## Introduction
+
+...
+[] what I need to learn is: 
+
+## What is Max Gas Per Pubdata?
+
+Max gas per pubdata is a value attached to each transaction on ZKsync Era, representing the maximum amount of gas a user is willing to pay for each byte of pubdata (public data) published on Ethereum.
+
+Key points:
+
+1. Default value: 50,000 gas per pubdata byte
+2. Can be customized per transaction
+3. Affects transaction success and cost
+
+## How It Works
+
+1. **Transaction Submission**: When sending a transaction, you specify the max gas per pubdata.
+2. **Execution**: ZKsync executes the transaction and calculates the actual pubdata cost.
+3. **Comparison**: The actual cost is compared against your specified max value.
+4. **Outcome**:
+   - If actual cost ≤ specified max: Transaction succeeds
+   - If actual cost > specified max: Transaction fails
+
+## Why ZKsync Chose This Approach
+
+1. Flexibility in adjusting to L1 gas price fluctuations
+2. Allows users to set limits on pubdata costs
+3. Optimizes L1 data availability costs
+
+## Technical Example: ZKFest Voting Contract
+
+Let's examine how max gas per pubdata works with a real contract
+
+### ZKFestVoting Contract
+
+```solidity
+contract ZKFestVoting {
+    mapping(address => uint8) public participation;
+
+    function vote(string memory stageName) external {
+        uint256 stageIndex = getStageIndex(stageName);
+        require(stageIndex < 3, "Invalid stage");
+        uint256 stageBit = 1 << stageIndex;
+        
+        require((participation[msg.sender] & stageBit) == 0, "Already voted for this stage");
+
+        emit Voted(msg.sender, Stage(stageIndex));
+    }
+    // ... other functions ...
+
+}
+
+```
+
+### Deployment and interaction script
+
+```typescript
+import { deployContract, getProvider, getWallet } from "./utils";
+import { Deployer } from "@matterlabs/hardhat-zksync";
+import * as hre from "hardhat";
+import { ethers } from "ethers";
+
+export default async function () {
+    const wallet = getWallet();
+    const deployer = new Deployer(hre, wallet);
+    
+    // Deploy contract
+    const artifact = await deployer.loadArtifact("ZKFestVoting");
+    const contract = await deployContract("ZKFestVoting", []);
+
+    // Function to send transaction with custom gas settings
+    const sendAndExplainTx = async (gasPerPubdata: string | number, gasLimit: string | number) => {
+      console.log(`\nTesting with gasPerPubdata: ${gasPerPubdata}, gasLimit: ${gasLimit}`);
+      try {
+        const stageName = stageNames[currentStageIndex]; 
+        currentStageIndex++;
+
+        const customTx = await createCustomTx(gasPerPubdata, gasLimit, stageName);
+        console.log(`Voting for stage: ${stageName}`);
+
+        console.log("Custom transaction created, attempting to send...");
+
+        const txResponse = await wallet.sendTransaction(customTx);
+        console.log(`Transaction sent. Hash: ${txResponse.hash}`);
+        console.log("Transaction sent, waiting for confirmation...");
+
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Transaction confirmation timeout")), 60000) // 60 second timeout
+        );
+
+        // const receipt = await txResponse.wait();
+        const receiptPromise = txResponse.wait();
+
+        // const receipt = await Promise.race([receiptPromise, timeoutPromise]);
+        const receipt = await Promise.race([receiptPromise, timeoutPromise]) as ethers.TransactionReceipt;
+
+        console.log("Transaction successful!");
+        console.log(`Gas used: ${receipt.gasUsed}`);
+      } catch (error) {
+          console.log("Transaction failed!");
+          console.error("Error details:", error);
+          if (error instanceof Error) {
+            console.error("Error message:", error.message);
+          }
+      }
+    }
+
+    // Create custom transaction
+    const createCustomTx = async (gasPerPubdata: string | number, gasLimit: string | number, stageName: string) => {
+
+      const voteFunctionData = contract.interface.encodeFunctionData("vote", [stageName]); 
+
+      const gasPrice = await provider.getGasPrice();
+
+      let customTx = {
+        to: contractAddress,
+        from: wallet.address,
+        data: voteFunctionData,
+        gasLimit: ethers.getBigInt(gasLimit),
+        gasPrice: gasPrice,
+        chainId: (await provider.getNetwork()).chainId,
+        nonce: await provider.getTransactionCount(wallet.address),
+        type: 113,
+        customData: {
+          gasPerPubdata: ethers.getBigInt(gasPerPubdata)
+        },
+        value: ethers.getBigInt(0),
+      };
+
+      return customTx;
+    }
+
+    // Test different scenarios
+    await sendAndExplainTx(utils.DEFAULT_GAS_PER_PUBDATA_LIMIT, "2000000");
+    await sendAndExplainTx("100", "2000000"); // Very low gasPerPubdata
+    await sendAndExplainTx(utils.DEFAULT_GAS_PER_PUBDATA_LIMIT, "100000000"); // Very high gasLimit
+}
+```
+
+This script demonstrates:
+
+1. Deploying the ZKFestVoting contract
+2. Creating transactions with custom gas per pubdata settings
+3. Testing different scenarios to observe the impact of gas per pubdata
+
+## Block Explorer View
+
+After running these transactions, you can verify their execution on the ZKsync Era block explorer. Here's an example of what you might see:
+
+[insert picture]
+
+```
+
+This real transaction shows:
+
+1. The default gas per pubdata (50,000) was sufficient
+2. Only 4.28% of the gas limit was used, indicating efficiency
+3. The low fee demonstrates ZKsync Era's cost-effectiveness
+
+## Conclusion
+
+Understanding and properly configuring max gas per pubdata is crucial for efficient development on ZKsync Era. By carefully managing this parameter, developers can create more economical and user-friendly decentralized applications while leveraging zkSync's scaling benefits.
+
+
+
 ## Project Layout
 
 - `/contracts`: Contains solidity smart contracts.
