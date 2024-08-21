@@ -76,7 +76,6 @@ export default async function () {
       }
     }
 
-    // Move this function outside of main
     const createCustomTx = async (gasPerPubdata: string | number, gasLimit: string | number, stageName: string) => {
 
       // const voteFunctionData = contract.interface.encodeFunctionData("vote", [0]); // Vote for Culture stage
