@@ -77,6 +77,53 @@ The `gasPerPubdata` parameter in ZKsync Era transactions allows developers to sp
 
 By experimenting with different `gasPerPubdata` values in the deployment script, you can observe how it affects transaction success and overall gas costs in various scenarios.
 
+## In-Depth: Gas Per Pubdata Mechanics
+
+Understanding the intricacies of `gasPerPubdata` is crucial for developers working with zkSync Era. Let's dive into some key aspects:
+
+### Transaction Gas Limits and Pubdata
+
+- ZKsync Era has a gas limit for each transaction, imposed by prover/circuits restrictions.
+- This gas limit covers both computation and pubdata publishing.
+- It introduces an upper bound for `gasPerPubdata`.
+- If `gasPerPubdata` is set too high, users might not be able to publish significant amounts of pubdata within a single transaction.
+
+### Post-Charging Approach
+
+Unlike calldata-based rollups that precharge for data, ZKsync Era uses a post-charging approach:
+
+1. Exact state diffs are only known after transaction execution.
+2. A counter tracks pubdata usage during execution.
+3. Users are charged for pubdata at the end of the transaction.
+
+### Challenges and Solutions
+
+- **Challenge**: Users might spend all gas on computation, leaving none for pubdata.
+- **Solution**: If there's insufficient gas for pubdata, the transaction is reverted.
+- **Outcome**: Users pay for computation, but no state changes (and thus no pubdata) are produced.
+
+### Benefits of Post-Charging
+
+1. Removes unnecessary overhead.
+2. Decouples gas used for execution from gas used for data availability.
+3. Eliminates caps on `gasPerPubdata`.
+4. Allows users to provide as much gas as needed for pubdata, separate from computation limits.
+
+### Gas Charging Mechanism
+
+- Gas is charged whenever pubdata is published.
+- This approach allows for more accurate and fair pricing based on actual pubdata usage.
+
+### Implications for Developers
+
+1. **Gas Estimation**: Account for both computation and potential pubdata costs.
+2. **Error Handling**: Implement robust error handling for cases where transactions might revert due to insufficient gas for pubdata.
+3. **Transaction Design**: Optimize transactions to balance computation and pubdata usage.
+4. **Testing**: Thoroughly test with various `gasPerPubdata` settings to ensure transaction success under different network conditions.
+
+By understanding these mechanics, developers can create more efficient and reliable applications on ZKsync Era, taking full advantage of its unique approach to handling pubdata costs.
+
+
 ## Project Layout
 
 - `/contracts`: Contains solidity smart contracts.
