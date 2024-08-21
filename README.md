@@ -278,9 +278,7 @@ After running these transactions, you can verify their execution on the ZKsync E
 
 [insert picture]
 
-```
-
-This real transaction shows:
+This real transaction shows [will show the gas per pubdata, gas limit, and gas used from Block explorer]:
 
 1. The default gas per pubdata (50,000) was sufficient
 2. Only 4.28% of the gas limit was used, indicating efficiency
