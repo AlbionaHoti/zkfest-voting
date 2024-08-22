@@ -26,7 +26,9 @@ contract ZKFestVoting {
         // Check if the user has already voted for the stage, the participattion is checking the transaction sender and the stageBit is the stage the user is voting for
         require((participation[msg.sender] & stageBit) == 0, "Already voted for this stage");
 
+        // we're updating the participation mapping with the stageBit, the |= is the bitwise OR assignment operator, it's used to update the participation mapping with the stageBit
         participation[msg.sender] |= uint8(stageBit);
+        
         // emit does not store data, it only logs the event, in this case it's logging the voter and the stage
         emit Voted(msg.sender, Stage(stageIndex));
     }
